@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CS 3212 Reviewer</title>
+    <style>
+        :root {
+            --ios-bg: #F2F2F7;
+            --ios-card: #FFFFFF;
+            --ios-blue: #007AFF;
+            --ios-green: #34C759;
+            --ios-red: #FF3B30;
+            --ios-text: #000000;
+            --ios-secondary: #8E8E93;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--ios-bg);
+            color: var(--ios-text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #quiz-container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--ios-card);
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            color: var(--ios-text);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #E5E5EA;
+            border-radius: 3px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: var(--ios-blue);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .status {
+            font-size: 12px;
+            color: var(--ios-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .question {
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 20px;
+            min-height: 50px;
+        }
+
+        .option {
+            background: #F2F2F7;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.1s ease, background 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .option:active { transform: scale(0.98); }
+
+        .option.correct {
+            background: #E2F9E9;
+            border-color: var(--ios-green);
+            color: #1A6B31;
+        }
+
+        .option.wrong {
+            background: #FFE9E9;
+            border-color: var(--ios-red);
+            color: #9C1A1A;
+        }
+
+        #id-input {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            border: 1px solid #C7C7CC;
+            border-radius: 12px;
+            background: #F2F2F7;
+            margin-bottom: 15px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        #id-input:focus { border-color: var(--ios-blue); }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--ios-blue);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        #feedback {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .hidden { display: none; }
+        .result-score { font-size: 48px; font-weight: 800; color: var(--ios-blue); }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div class="header">
+        <h1>CS 3212: Programming Languages</h1>
+        <div id="quiz-progress-meta">
+            <span class="status">Question <span id="cur-num">1</span> of <span id="total-num">20</span></span>
+            <div class="progress-bar"><div id="progress-fill"></div></div>
+        </div>
+    </div>
+
+    <div id="quiz-screen">
+        <div class="question" id="q-text">Loading question...</div>
+        
+        <div id="mc-area"></div>
+
+        <div id="id-area" class="hidden">
+            <input type="text" id="id-input" placeholder="Your answer..." autocomplete="off">
+            <button class="btn-primary" onclick="checkID()">Submit</button>
+        </div>
+
+        <div id="feedback"></div>
+        <button id="next-btn" class="btn-primary hidden" onclick="nextQ()" style="margin-top:10px; background: #000;">Next Question</button>
+    </div>
+
+    <div id="result-screen" class="hidden" style="text-align: center;">
+        <h2 style="margin-top:0;">Summary</h2>
+        <div class="result-score" id="final-score">0</div>
+        <p style="color: var(--ios-secondary); font-weight: 600;">Questions Correct</p>
+        <button class="btn-primary" onclick="location.reload()" style="margin-top:20px;">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    const rawData = [
+        // Multiple Choice
+        { type: "mc", q: "What language did Konrad Zuse develop between 1943 and 1945?", a: ["Fortran", "Plankalkül", "Lisp", "Algol"], c: 1 },
+        { type: "mc", q: "The IBM 704 system's floating-point hardware signaled the end of which era?", a: ["Interpretive", "Object-Oriented", "Scripting", "Logic"], c: 0 },
+        { type: "mc", q: "Which language is the second-oldest high-level language still in widespread use?", a: ["Fortran", "C", "Lisp", "Cobol"], c: 2 },
+        { type: "mc", q: "Who developed Lisp at MIT in 1958?", a: ["John Backus", "John McCarthy", "James Gosling", "Bjarne Stroustrup"], c: 1 },
+        { type: "mc", q: "Which paradigm focuses on sending messages to objects?", a: ["Procedural", "Functional", "Object-Oriented", "Logic"], c: 2 },
+        { type: "mc", q: "Which language was originally designed for embedded consumer electronics like microwave ovens?", a: ["C++", "Java", "Python", "JavaScript"], c: 1 },
+        { type: "mc", q: "Which language classification has zero abstraction from the hardware?", a: ["Assembly", "Machine Language", "High-level", "System"], c: 1 },
+        { type: "mc", q: "What is the dominant paradigm for Graphical User Interfaces?", a: ["Logic", "Functional", "Event-Driven", "Parallel"], c: 2 },
+        { type: "mc", q: "Which language was originally developed by Dennis Ritchie at Bell Labs?", a: ["B", "C", "C++", "Java"], c: 1 },
+        { type: "mc", q: "Which paradigm treats computation as mathematical function evaluation?", a: ["Imperative", "Functional", "Declarative", "Procedural"], c: 1 },
+
+        // Identification
+        { type: "id", q: "What does the acronym COBOL stand for?", c: ["Common Business Oriented Language"] },
+        { type: "id", q: "Who created C++ by adding classes to the C language?", c: ["Bjarne Stroustrup"] },
+        { type: "id", q: "What language classification is machine-independent and portable?", c: ["High-level Language", "High level"] },
+        { type: "id", q: "Who designed the Python programming language?", c: ["Guido van Rossum"] },
+        { type: "id", q: "What translator converts assembly language into machine code?", c: ["Assembler"] },
+        { type: "id", q: "What paradigm uses facts and rules to build programs?", c: ["Logic Programming", "Logic"] },
+        { type: "id", q: "What was the original name for JavaScript?", c: ["Mocha"] },
+        { type: "id", q: "What language uses English-like terms like 'mov' and 'add'?", c: ["Assembly Language", "Assembly"] },
+        { type: "id", q: "Who developed the PHP language in 1994?", c: ["Rasmus Lerdorf"] },
+        { type: "id", q: "What notation was presented by Backus in 1959 to define language syntax?", c: ["BNF", "Backus-Naur Form"] }
+    ];
+
+    let questions = [];
+    let idx = 0;
+    let score = 0;
+    let answered = false;
+
+    function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
+
+    function start() {
+        questions = shuffle([...rawData]);
+        document.getElementById('total-num').innerText = questions.length;
+        load();
+    }
+
+    function load() {
+        answered = false;
+        document.getElementById('next-btn').classList.add('hidden');
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('id-input').value = '';
+        
+        const q = questions[idx];
+        document.getElementById('cur-num').innerText = idx + 1;
+        document.getElementById('progress-fill').style.width = ((idx/questions.length)*100) + "%";
+        document.getElementById('q-text').innerText = q.q;
+
+        const mc = document.getElementById('mc-area');
+        const id = document.getElementById('id-area');
+
+        if (q.type === "mc") {
+            mc.classList.remove('hidden');
+            id.classList.add('hidden');
+            mc.innerHTML = '';
+            q.a.forEach((opt, i) => {
+                const d = document.createElement('div');
+                d.className = 'option';
+                d.innerText = opt;
+                d.onclick = () => selectMC(i, d);
+                mc.appendChild(d);
+            });
+        } else {
+            mc.classList.add('hidden');
+            id.classList.remove('hidden');
+            setTimeout(() => document.getElementById('id-input').focus(), 100);
+        }
+    }
+
+    function selectMC(i, el) {
+        if (answered) return;
+        answered = true;
+        const correct = questions[idx].c;
+        if (i === correct) {
+            el.classList.add('correct');
+            score++;
+            showFeedback("Correct!", true);
+        } else {
+            el.classList.add('wrong');
+            document.getElementById('mc-area').children[correct].classList.add('correct');
+            showFeedback("Incorrect", false);
+        }
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function checkID() {
+        if (answered) return;
+        const val = document.getElementById('id-input').value.trim().toLowerCase();
+        if (!val) return;
+        answered = true;
+        const acceptable = questions[idx].c.map(v => v.toLowerCase());
+        
+        if (acceptable.includes(val)) {
+            score++;
+            showFeedback("Correct! Answer: " + questions[idx].c[0], true);
+        } else {
+            showFeedback("Incorrect. Answer: " + questions[idx].c[0], false);
+        }
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function showFeedback(txt, isPos) {
+        const f = document.getElementById('feedback');
+        f.innerText = txt;
+        f.style.display = 'block';
+        f.style.background = isPos ? '#E2F9E9' : '#FFE9E9';
+        f.style.color = isPos ? '#1A6B31' : '#9C1A1A';
+    }
+
+    function nextQ() {
+        idx++;
+        if (idx < questions.length) load();
+        else finish();
+    }
+
+    function finish() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('quiz-progress-meta').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('final-score').innerText = score + " / " + questions.length;
+    }
+
+    document.getElementById('id-input').addEventListener("keyup", e => { if(e.key === "Enter") checkID(); });
+
+    start();
+</script>
+</body>
+</html>
