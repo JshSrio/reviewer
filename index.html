@@ -21,9 +21,25 @@
             color: var(--ios-text);
             margin: 0;
             display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
+            min-height: 100vh;
             padding: 20px;
+            box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
+        }
+
+        /* Fixed Title at the top */
+        .page-title {
+            position: fixed;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+            z-index: 10;
         }
 
         #quiz-container {
@@ -33,25 +49,19 @@
             padding: 24px;
             border-radius: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            position: relative;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .header h1 {
-            font-size: 20px;
-            font-weight: 700;
-            margin: 0 0 10px 0;
-            color: var(--ios-text);
+            margin-bottom: 20px;
         }
 
         .progress-bar {
             height: 6px;
             background: #E5E5EA;
             border-radius: 3px;
-            margin: 15px 0;
+            margin: 12px 0;
             overflow: hidden;
         }
 
@@ -63,7 +73,7 @@
         }
 
         .status {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--ios-secondary);
             text-transform: uppercase;
             font-weight: 600;
@@ -81,7 +91,7 @@
         .option {
             background: #F2F2F7;
             padding: 16px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             border-radius: 14px;
             font-size: 16px;
             font-weight: 500;
@@ -128,7 +138,6 @@
             font-size: 17px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s;
         }
 
         #feedback {
@@ -146,25 +155,23 @@
 </head>
 <body>
 
+<h1 class="page-title">CS 3212: Programming Languages</h1>
+
 <div id="quiz-container">
-    <div class="header">
-        <h1>CS 3212: Programming Languages</h1>
-        <div id="quiz-progress-meta">
+    <div id="quiz-header-meta">
+        <div class="header">
             <span class="status">Question <span id="cur-num">1</span> of <span id="total-num">20</span></span>
             <div class="progress-bar"><div id="progress-fill"></div></div>
         </div>
     </div>
 
     <div id="quiz-screen">
-        <div class="question" id="q-text">Loading question...</div>
-        
+        <div class="question" id="q-text">Loading...</div>
         <div id="mc-area"></div>
-
         <div id="id-area" class="hidden">
             <input type="text" id="id-input" placeholder="Your answer..." autocomplete="off">
             <button class="btn-primary" onclick="checkID()">Submit</button>
         </div>
-
         <div id="feedback"></div>
         <button id="next-btn" class="btn-primary hidden" onclick="nextQ()" style="margin-top:10px; background: #000;">Next Question</button>
     </div>
@@ -179,29 +186,26 @@
 
 <script>
     const rawData = [
-        // Multiple Choice
-        { type: "mc", q: "What language did Konrad Zuse develop between 1943 and 1945?", a: ["Fortran", "Plankalkül", "Lisp", "Algol"], c: 1 },
-        { type: "mc", q: "The IBM 704 system's floating-point hardware signaled the end of which era?", a: ["Interpretive", "Object-Oriented", "Scripting", "Logic"], c: 0 },
-        { type: "mc", q: "Which language is the second-oldest high-level language still in widespread use?", a: ["Fortran", "C", "Lisp", "Cobol"], c: 2 },
-        { type: "mc", q: "Who developed Lisp at MIT in 1958?", a: ["John Backus", "John McCarthy", "James Gosling", "Bjarne Stroustrup"], c: 1 },
-        { type: "mc", q: "Which paradigm focuses on sending messages to objects?", a: ["Procedural", "Functional", "Object-Oriented", "Logic"], c: 2 },
-        { type: "mc", q: "Which language was originally designed for embedded consumer electronics like microwave ovens?", a: ["C++", "Java", "Python", "JavaScript"], c: 1 },
-        { type: "mc", q: "Which language classification has zero abstraction from the hardware?", a: ["Assembly", "Machine Language", "High-level", "System"], c: 1 },
-        { type: "mc", q: "What is the dominant paradigm for Graphical User Interfaces?", a: ["Logic", "Functional", "Event-Driven", "Parallel"], c: 2 },
-        { type: "mc", q: "Which language was originally developed by Dennis Ritchie at Bell Labs?", a: ["B", "C", "C++", "Java"], c: 1 },
-        { type: "mc", q: "Which paradigm treats computation as mathematical function evaluation?", a: ["Imperative", "Functional", "Declarative", "Procedural"], c: 1 },
-
-        // Identification
+        { type: "mc", q: "Who designed Plankalkül, the first high-level programming language?", a: ["John Backus", "Konrad Zuse", "John McCarthy", "Alan Kay"], c: 1 },
+        { type: "mc", q: "Which IBM system inspired the development of Fortran in 1954?", a: ["IBM 360", "IBM 704", "Z4", "PDP-11"], c: 1 },
+        { type: "mc", q: "Which language is the second-oldest high-level language in widespread use?", a: ["Fortran", "Lisp", "C", "Cobol"], c: 1 },
+        { type: "mc", q: "What paradigm treats computation as evaluating mathematical functions?", a: ["Imperative", "Procedural", "Functional", "Logic"], c: 2 },
+        { type: "mc", q: "Which language was originally created for embedded consumer electronic devices?", a: ["C++", "Python", "Java", "PHP"], c: 2 },
+        { type: "mc", q: "Which classification describes binary instructions (0 and 1)?", a: ["Assembly", "System", "Machine Language", "Visual"], c: 2 },
+        { type: "mc", q: "Who created C++ by adding classes and object-oriented features to C?", a: ["Dennis Ritchie", "Bjarne Stroustrup", "James Gosling", "Larry Wall"], c: 1 },
+        { type: "mc", q: "What notation was introduced in 1959 to define programming language syntax?", a: ["Lambda Calculus", "BNF (Backus-Naur Form)", "RegEx", "Morse Code"], c: 1 },
+        { type: "mc", q: "Which language uses 'atoms' and 'lists' as its only two data types?", a: ["Prolog", "Algol 60", "Lisp", "Smalltalk"], c: 2 },
+        { type: "mc", q: "Which paradigm is the dominant choice for Graphical User Interfaces?", a: ["Functional", "Event-Driven", "Logic", "Parallel"], c: 1 },
         { type: "id", q: "What does the acronym COBOL stand for?", c: ["Common Business Oriented Language"] },
-        { type: "id", q: "Who created C++ by adding classes to the C language?", c: ["Bjarne Stroustrup"] },
-        { type: "id", q: "What language classification is machine-independent and portable?", c: ["High-level Language", "High level"] },
-        { type: "id", q: "Who designed the Python programming language?", c: ["Guido van Rossum"] },
+        { type: "id", q: "Who designed Python at Stichting Mathematisch Centrum?", c: ["Guido van Rossum"] },
         { type: "id", q: "What translator converts assembly language into machine code?", c: ["Assembler"] },
-        { type: "id", q: "What paradigm uses facts and rules to build programs?", c: ["Logic Programming", "Logic"] },
-        { type: "id", q: "What was the original name for JavaScript?", c: ["Mocha"] },
-        { type: "id", q: "What language uses English-like terms like 'mov' and 'add'?", c: ["Assembly Language", "Assembly"] },
-        { type: "id", q: "Who developed the PHP language in 1994?", c: ["Rasmus Lerdorf"] },
-        { type: "id", q: "What notation was presented by Backus in 1959 to define language syntax?", c: ["BNF", "Backus-Naur Form"] }
+        { type: "id", q: "What language uses facts and rules to building programs?", c: ["Prolog"] },
+        { type: "id", q: "Who developed JavaScript at Netscape in 1995?", c: ["Brendan Eich"] },
+        { type: "id", q: "What term describes a language like Scratch that manipulates elements graphically?", c: ["Visual Programming Language", "Visual"] },
+        { type: "id", q: "What imperative style replaces 'gotos' with nested loops and subroutines?", c: ["Structured Programming", "Structured"] },
+        { type: "id", q: "Who led the Java design team at Sun Microsystems?", c: ["James Gosling"] },
+        { type: "id", q: "What was the name of the first publicly available version of PHP?", c: ["Personal Home Page Tools", "Personal Home Page"] },
+        { type: "id", q: "What is the simplest data type in Zuse's Plankalkül?", c: ["Single bit", "Bit"] }
     ];
 
     let questions = [];
@@ -297,7 +301,7 @@
 
     function finish() {
         document.getElementById('quiz-screen').classList.add('hidden');
-        document.getElementById('quiz-progress-meta').classList.add('hidden');
+        document.getElementById('quiz-header-meta').classList.add('hidden');
         document.getElementById('result-screen').classList.remove('hidden');
         document.getElementById('final-score').innerText = score + " / " + questions.length;
     }
